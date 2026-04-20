@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${title}">Enterprise WMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --bg: #06080d;
+            --surface: #0c1018;
+            --surface-2: #111827;
+            --surface-3: #1a2332;
+            --border: rgba(255,255,255,0.06);
+            --border-accent: rgba(99,102,241,0.25);
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99,102,241,0.15);
+            --cyan: #22d3ee;
+            --cyan-glow: rgba(34,211,238,0.12);
+            --emerald: #10b981;
+            --emerald-glow: rgba(16,185,129,0.12);
+            --rose: #f43f5e;
+            --rose-glow: rgba(244,63,94,0.12);
+            --amber: #f59e0b;
+            --amber-glow: rgba(245,158,11,0.12);
+            --orange: #f97316;
+            --gradient-1: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --gradient-2: linear-gradient(135deg, #22d3ee, #06b6d4);
+            --gradient-3: linear-gradient(135deg, #10b981, #059669);
+            --gradient-4: linear-gradient(135deg, #f43f5e, #e11d48);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+            --shadow-glow: 0 0 40px rgba(99,102,241,0.08);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========== AMBIENT BACKGROUND ========== */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .ambient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.4;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .ambient-orb:nth-child(1) {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%);
+            top: -10%; left: -5%;
+            animation-delay: 0s;
+        }
+        .ambient-orb:nth-child(2) {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(34,211,238,0.1), transparent 70%);
+            top: 40%; right: -8%;
+            animation-delay: -7s;
+            animation-duration: 25s;
+        }
+        .ambient-orb:nth-child(3) {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(16,185,129,0.08), transparent 70%);
+            bottom: -5%; left: 30%;
+            animation-delay: -14s;
+            animation-duration: 30s;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.05); }
+            66% { transform: translate(-20px, 15px) scale(0.95); }
+        }
+
+        /* Grid pattern overlay */
+        .grid-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 100%);
+        }
+
+        /* Particle canvas */
+        #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        .app-shell { position: relative; z-index: 1; }
+
+        /* ========== TOPBAR ========== */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(6,8,13,0.8);
+            backdrop-filter: blur(20px) saturate(1.5);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand-logo {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            display: grid; place-items: center;
+            background: var(--gradient-1);
+            font-size: 20px;
+            box-shadow: 0 0 24px rgba(99,102,241,0.3);
+            animation: logoGlow 3s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+        .brand-logo::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(25deg); }
+            100% { transform: translateX(200%) rotate(25deg); }
+        }
+        @keyframes logoGlow {
+            0%, 100% { box-shadow: 0 0 24px rgba(99,102,241,0.3); }
+            50% { box-shadow: 0 0 40px rgba(99,102,241,0.5); }
+        }
+        .brand-text h1 {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .brand-text span {
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            font-weight: 500;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border: 1px solid var(--border);
+            background: rgba(17,24,39,0.8);
+            backdrop-filter: blur(8px);
+        }
+        .pill-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .pill-dot.live { background: var(--emerald); box-shadow: 0 0 8px var(--emerald); animation: blink 2s ease-in-out infinite; }
+        .pill-dot.warn { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+        .pill-dot.danger { background: var(--rose); box-shadow: 0 0 8px var(--rose); }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .clock-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-light);
+            font-weight: 600;
+            min-width: 90px;
+            text-align: right;
+        }
+
+        .btn-topbar {
+            border: 1px solid var(--border);
+            background: rgba(17,24,39,0.6);
+            color: var(--text-secondary);
+            border-radius: 999px;
+            padding: 7px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-topbar:hover {
+            border-color: var(--accent);
+            color: var(--accent-light);
+            background: var(--accent-glow);
+        }
+
+        /* ========== LAYOUT ========== */
+        .layout { display: flex; min-height: calc(100vh - 62px); }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: 76px;
+            padding: 16px 8px;
+            border-right: 1px solid var(--border);
+            background: rgba(6,8,13,0.6);
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .nav-btn {
+            width: 58px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 14px;
+            padding: 10px 4px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-family: inherit;
+            position: relative;
+        }
+        .nav-btn .icon {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+        .nav-btn small {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .nav-btn:hover {
+            color: var(--accent-light);
+            background: var(--accent-glow);
+        }
+        .nav-btn:hover .icon { transform: scale(1.15); }
+        .nav-btn.active {
+            color: var(--accent-light);
+            background: var(--accent-glow);
+            border: 1px solid rgba(99,102,241,0.2);
+        }
+        .nav-btn.active::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            border-radius: 0 4px 4px 0;
+            background: var(--gradient-1);
+            box-shadow: 0 0 12px rgba(99,102,241,0.5);
+        }
+
+        .sidebar-divider {
+            width: 36px;
+            height: 1px;
+            background: var(--border);
+            margin: 6px 0;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .panel {
+            display: none;
+            animation: panelEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .panel.active { display: block; }
+        @keyframes panelEnter {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== SECTION HEADER ========== */
+        .section-header {
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .section-header h2 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .section-header p {
+            margin-top: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        .section-divider {
+            height: 2px;
+            margin-top: 16px;
+            background: linear-gradient(90deg, var(--accent), transparent 60%);
+            border-radius: 2px;
+        }
+
+        /* ========== CARDS ========== */
+        .card {
+            background: rgba(12,16,24,0.7);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .card:hover {
+            border-color: rgba(99,102,241,0.15);
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-2px);
+        }
+        .card:hover::before { opacity: 1; }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .card-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        /* ========== GRIDS ========== */
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .mt-16 { margin-top: 16px; }
+        .mt-24 { margin-top: 24px; }
+
+        /* ========== METRIC CARDS ========== */
+        .metric-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            background: rgba(12,16,24,0.6);
+            backdrop-filter: blur(8px);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        .metric-card .glow-bg {
+            position: absolute;
+            top: -20px; right: -20px;
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        .metric-card:hover .glow-bg { opacity: 0.8; }
+        .metric-icon {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: grid; place-items: center;
+            font-size: 18px;
+            margin-bottom: 14px;
+        }
+        .metric-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .metric-value {
+            font-size: 36px;
+            font-weight: 800;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+        }
+        .metric-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+        .trend-up { color: var(--emerald); background: var(--emerald-glow); }
+        .trend-down { color: var(--rose); background: var(--rose-glow); }
+        .trend-neutral { color: var(--amber); background: var(--amber-glow); }
+
+        /* ========== PROGRESS BAR ========== */
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.06);
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            border-radius: inherit;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 20px; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+            animation: progressGleam 2s ease-in-out infinite;
+        }
+        @keyframes progressGleam {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        /* ========== WAREHOUSE VISUAL ========== */
+        .warehouse-item {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .warehouse-item:last-child { border-bottom: none; }
+        .warehouse-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .warehouse-name {
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .warehouse-icon {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            display: grid; place-items: center;
+            font-size: 13px;
+            background: var(--accent-glow);
+            border: 1px solid rgba(99,102,241,0.15);
+        }
+        .warehouse-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-light);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ========== MOVEMENT FEED ========== */
+        .movement-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        .movement-item:last-child { border-bottom: none; }
+        .movement-item:hover { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 10px 8px; margin: 0 -8px; }
+
+        .movement-type {
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            min-width: 44px;
+            text-align: center;
+        }
+        .type-in { color: var(--emerald); background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.2); }
+        .type-out { color: var(--rose); background: var(--rose-glow); border: 1px solid rgba(244,63,94,0.2); }
+        .type-info { color: var(--cyan); background: var(--cyan-glow); border: 1px solid rgba(34,211,238,0.2); }
+
+        .movement-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            min-width: 50px;
+        }
+        .movement-product { flex: 1; font-size: 13px; font-weight: 500; }
+        .movement-qty {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-light);
+        }
+
+        /* ========== ALERT CARDS (AI FEED) ========== */
+        .alert-card {
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            border: 1px solid var(--border);
+            background: rgba(12,16,24,0.5);
+            transition: all 0.25s;
+        }
+        .alert-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .alert-type {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .alert-message {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        /* ========== SCAN CONSOLE ========== */
+        .scan-console {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .scan-mode-group {
+            display: flex;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .scan-mode-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+        .scan-mode-btn.active-in { background: var(--emerald-glow); color: var(--emerald); }
+        .scan-mode-btn.active-out { background: var(--rose-glow); color: var(--rose); }
+
+        /* ========== FORM FIELDS ========== */
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+        .form-input {
+            border: 1px solid var(--border);
+            background: rgba(17,24,39,0.6);
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .form-input::placeholder { color: var(--text-muted); }
+        .form-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn-primary {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            background: var(--gradient-1);
+            color: #fff;
+            border: none;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: all 0.25s;
+            box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+        .btn-primary:hover::before { transform: translateX(100%); }
+        .btn-primary:hover {
+            box-shadow: 0 6px 24px rgba(99,102,241,0.45);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            background: rgba(17,24,39,0.6);
+            color: var(--accent-light);
+            border: 1px solid rgba(99,102,241,0.2);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: var(--accent-glow);
+            border-color: rgba(99,102,241,0.4);
+        }
+
+        /* ========== DATA TABLE ========== */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th {
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(17,24,39,0.4);
+            position: sticky;
+            top: 0;
+        }
+        .data-table td {
+            padding: 12px 14px;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        .data-table tbody tr:hover td { background: rgba(99,102,241,0.04); }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .status-ok { color: var(--emerald); background: var(--emerald-glow); }
+        .status-low { color: var(--rose); background: var(--rose-glow); }
+        .status-warn { color: var(--amber); background: var(--amber-glow); }
+        .status-expired { color: var(--rose); background: var(--rose-glow); }
+
+        /* ========== AI PANEL ========== */
+        .insight-card {
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid;
+            transition: all 0.25s;
+        }
+        .insight-card:hover { transform: translateX(4px); }
+        .insight-card.danger {
+            border-color: rgba(244,63,94,0.2);
+            background: rgba(244,63,94,0.05);
+        }
+        .insight-card.warning {
+            border-color: rgba(245,158,11,0.2);
+            background: rgba(245,158,11,0.05);
+        }
+        .insight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .insight-title { font-size: 13px; font-weight: 600; }
+        .insight-value { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+        .insight-recommendation {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ai-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--gradient-1);
+            color: white;
+            font-weight: 700;
+        }
+
+        /* ========== CATEGORY BAR CHART ========== */
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .bar-label {
+            width: 100px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .bar-track {
+            flex: 1;
+            height: 24px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.04);
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: inherit;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.9);
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08));
+        }
+        .bar-value {
+            min-width: 44px;
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-light);
+        }
+
+        /* ========== DECISION ENGINE ========== */
+        .decision-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .decision-item:last-child { border-bottom: none; }
+        .decision-icon {
+            width: 32px; height: 32px;
+            border-radius: 10px;
+            display: grid; place-items: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .decision-text { font-size: 12px; line-height: 1.6; color: var(--text-secondary); }
+
+        /* ========== VOICE MODULE ========== */
+        .voice-layout { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; }
+
+        .voice-orb-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            gap: 20px;
+        }
+        .voice-orb {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            border: 2px solid rgba(99,102,241,0.3);
+            display: grid; place-items: center;
+            font-size: 32px;
+            color: var(--accent-light);
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .voice-orb::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 1px solid rgba(99,102,241,0.1);
+        }
+        .voice-orb::after {
+            content: '';
+            position: absolute;
+            inset: -16px;
+            border-radius: 50%;
+            border: 1px solid rgba(99,102,241,0.05);
+        }
+        .voice-orb.listening {
+            border-color: var(--emerald);
+            color: var(--emerald);
+            box-shadow: 0 0 40px rgba(16,185,129,0.3);
+            animation: voicePulse 1.2s ease-in-out infinite;
+        }
+        .voice-orb.speaking {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            box-shadow: 0 0 40px rgba(34,211,238,0.3);
+            animation: voicePulse 0.8s ease-in-out infinite;
+        }
+        @keyframes voicePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .voice-status {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+        }
+
+        .chat-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .chat-bubble {
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-size: 12px;
+            line-height: 1.6;
+            max-width: 85%;
+            animation: bubbleIn 0.3s ease;
+        }
+        @keyframes bubbleIn {
+            from { opacity: 0; transform: translateY(8px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .bubble-user {
+            background: var(--accent-glow);
+            border: 1px solid rgba(99,102,241,0.2);
+            color: var(--accent-light);
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .bubble-ai {
+            background: rgba(34,211,238,0.06);
+            border: 1px solid rgba(34,211,238,0.12);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+        }
+        .bubble-system {
+            background: rgba(148,163,184,0.06);
+            border: 1px solid rgba(148,163,184,0.1);
+            color: var(--text-secondary);
+            border-bottom-left-radius: 4px;
+            font-style: italic;
+        }
+
+        .quick-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .quick-btn {
+            background: rgba(17,24,39,0.6);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .quick-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent-light);
+            background: var(--accent-glow);
+        }
+
+        /* ========== REPORT CARDS ========== */
+        .report-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .report-card .report-value {
+            font-size: 32px;
+            font-weight: 800;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .report-card .report-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* ========== AUTH NOTE ========== */
+        .auth-note-card {
+            border: 1px solid rgba(99,102,241,0.15);
+            background: rgba(99,102,241,0.04);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .auth-note-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: grid; place-items: center;
+            background: var(--accent-glow);
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .auth-note-text {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        .auth-note-text a {
+            color: var(--accent-light);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .auth-note-text a:hover { text-decoration: underline; }
+
+        /* ========== TOAST ========== */
+        .toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 200;
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-lg);
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.success {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: var(--emerald);
+        }
+        .toast.error {
+            background: rgba(244,63,94,0.15);
+            border: 1px solid rgba(244,63,94,0.3);
+            color: var(--rose);
+        }
+
+        /* ========== FOOTER ========== */
+        .statusbar {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 10px 24px;
+            border-top: 1px solid var(--border);
+            background: rgba(6,8,13,0.9);
+            backdrop-filter: blur(12px);
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .statusbar .dot {
+            display: inline-block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .statusbar .dot-ok { background: var(--emerald); box-shadow: 0 0 6px var(--emerald); }
+        .statusbar .tail {
+            margin-left: auto;
+            color: var(--accent-light);
+            font-weight: 600;
+        }
+
+        /* ========== MINI CHART (SVG) ========== */
+        .mini-chart {
+            width: 100%;
+            height: 60px;
+            margin-top: 10px;
+        }
+        .mini-chart path {
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+        .mini-chart .chart-area {
+            opacity: 0.15;
+        }
+
+        /* ========== SCROLLBAR ========== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1200px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 900px) {
+            .grid-4, .grid-3, .grid-2, .voice-layout { grid-template-columns: 1fr; }
+            .layout { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                justify-content: center;
+                padding: 8px 12px;
+                gap: 4px;
+                overflow-x: auto;
+            }
+            .sidebar-divider { display: none; }
+            .nav-btn { min-width: auto; width: auto; padding: 8px 12px; }
+            .nav-btn.active::before { display: none; }
+            .content { padding: 16px; }
+            .topbar { padding: 10px 16px; }
+        }
+        @media (max-width: 600px) {
+            .section-header h2 { font-size: 22px; }
+            .metric-value { font-size: 28px; }
+        }
+
+        /* ========== LOADING SKELETON ========== */
+        .skeleton {
+            background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+            background-size: 200% 100%;
+            animation: skeletonLoad 1.5s ease-in-out infinite;
+            border-radius: 8px;
+        }
+        @keyframes skeletonLoad {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ========== COUNT ANIMATION ========== */
+        .count-up {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<!-- Ambient background effects -->
+<div class="ambient-bg">
+    <div class="ambient-orb"></div>
+    <div class="ambient-orb"></div>
+    <div class="ambient-orb"></div>
+</div>
+<div class="grid-pattern"></div>
+<canvas id="particles"></canvas>
+
+<div class="app-shell">
+    <!-- === TOPBAR === -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-logo">⬡</div>
+            <div class="brand-text">
+                <h1 th:text="${title}">Enterprise WMS</h1>
+                <span>AI-POWERED WAREHOUSE INTELLIGENCE</span>
+            </div>
+        </div>
+        <div class="top-actions">
+            <div id="low-pill" class="status-pill"><span class="pill-dot danger"></span> 0 LOW STOCK</div>
+            <div id="expiry-pill" class="status-pill"><span class="pill-dot warn"></span> 0 EXPIRING</div>
+            <div id="auth-badge" class="status-pill">PREVIEW</div>
+            <div class="status-pill"><span class="pill-dot live"></span> ONLINE</div>
+            <div id="clock" class="clock-display">00:00:00</div>
+            <a id="login-link" class="btn-topbar" href="/login">SIGN IN</a>
+            <button id="logout-btn" class="btn-topbar" type="button" style="display:none;">SIGN OUT</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- === SIDEBAR === -->
+        <aside class="sidebar">
+            <button class="nav-btn active" data-tab="dashboard"><span class="icon">⬡</span><small>Dash</small></button>
+            <button class="nav-btn" data-tab="inventory"><span class="icon">▦</span><small>Stock</small></button>
+            <div class="sidebar-divider"></div>
+            <button class="nav-btn" data-tab="ai"><span class="icon">◈</span><small>AI</small></button>
+            <button class="nav-btn" data-tab="voice"><span class="icon">◎</span><small>Voice</small></button>
+            <div class="sidebar-divider"></div>
+            <button class="nav-btn" data-tab="reports"><span class="icon">▤</span><small>Reports</small></button>
+        </aside>
+
+        <!-- === MAIN CONTENT === -->
+        <main class="content">
+
+            <!-- ==================== DASHBOARD ==================== -->
+            <section class="panel active" id="panel-dashboard">
+                <div class="section-header">
+                    <h2>Operations Dashboard</h2>
+                    <p>Real-time warehouse health metrics, live movement feed, and AI-powered alert monitoring.</p>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div id="auth-note"></div>
+                <div id="metric-cards" class="grid-4"></div>
+
+                <div class="grid-2 mt-24">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Warehouse Distribution</span>
+                            <span class="card-badge" style="color:var(--cyan);background:var(--cyan-glow);">LIVE</span>
+                        </div>
+                        <div id="warehouse-bars"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Recent Movements</span>
+                            <span class="card-badge" style="color:var(--emerald);background:var(--emerald-glow);">REAL-TIME</span>
+                        </div>
+                        <div id="recent-movements"></div>
+                    </div>
+                </div>
+
+                <div class="card mt-24">
+                    <div class="card-header">
+                        <span class="card-title">AI Alert Feed</span>
+                        <span class="card-badge" style="color:var(--accent-light);background:var(--accent-glow);">AI ENGINE</span>
+                    </div>
+                    <div id="ai-alert-feed" class="grid-3"></div>
+                </div>
+            </section>
+
+            <!-- ==================== INVENTORY ==================== -->
+            <section class="panel" id="panel-inventory">
+                <div class="section-header">
+                    <h2>Inventory Management</h2>
+                    <p>Barcode scanning, real-time stock levels, and location tracking across all warehouses.</p>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Scan Console</span>
+                    </div>
+                    <div class="scan-console">
+                        <div class="form-group">
+                            <span class="form-label">SCAN MODE</span>
+                            <div class="scan-mode-group">
+                                <button type="button" id="mode-in" class="scan-mode-btn active-in">IN</button>
+                                <button type="button" id="mode-out" class="scan-mode-btn">OUT</button>
+                            </div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:200px;">
+                            <label class="form-label" for="scan-id">BARCODE</label>
+                            <input id="scan-id" class="form-input" type="text" placeholder="e.g. BC001"/>
+                        </div>
+                        <div class="form-group" style="width:110px;">
+                            <label class="form-label" for="scan-qty">QTY</label>
+                            <input id="scan-qty" class="form-input" type="number" min="1" value="1"/>
+                        </div>
+                        <button type="button" id="scan-btn" class="btn-primary">SCAN &#9654;</button>
+                    </div>
+                    <div id="barcode-list" style="margin-top:12px;font-size:11px;color:var(--text-muted);"></div>
+                </div>
+
+                <div class="card mt-16">
+                    <div class="card-header">
+                        <span class="card-title">Stock Register</span>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>BARCODE</th>
+                                <th>PRODUCT</th>
+                                <th>WAREHOUSE</th>
+                                <th>LOCATION</th>
+                                <th>QTY</th>
+                                <th>MIN</th>
+                                <th>STATUS</th>
+                                <th>EXPIRY</th>
+                            </tr>
+                            </thead>
+                            <tbody id="inventory-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== AI ANALYTICS ==================== -->
+            <section class="panel" id="panel-ai">
+                <div class="section-header">
+                    <h2>AI Analytics Engine</h2>
+                    <p>Intelligent insights: low-stock detection, expiry prioritization, and operational recommendations.</p>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Low Stock Signals</span>
+                            <span class="ai-badge">AI</span>
+                        </div>
+                        <div id="low-stock-list"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Expiry Watch</span>
+                            <span class="ai-badge">AI</span>
+                        </div>
+                        <div id="expiry-list"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Category Distribution</span>
+                        </div>
+                        <div id="category-chart"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Decision Engine</span>
+                            <span class="ai-badge">AI</span>
+                        </div>
+                        <div id="decision-engine"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== VOICE ==================== -->
+            <section class="panel" id="panel-voice">
+                <div class="section-header">
+                    <h2>Voice Interaction</h2>
+                    <p>Natural language queries for stock summaries, alerts, and warehouse operations.</p>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div class="voice-layout">
+                    <div class="card" style="display:flex;flex-direction:column;gap:20px;">
+                        <div class="card-title">VOICE TERMINAL</div>
+                        <div class="voice-orb-container">
+                            <div id="voice-orb" class="voice-orb">◎</div>
+                            <div id="voice-status" class="voice-status">STANDBY</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="voice-query">ASK WMS</label>
+                            <input id="voice-query" class="form-input" type="text" placeholder="Ask about stock, expiry, or warehouse status..."/>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <button type="button" id="listen-btn" class="btn-secondary" style="flex:0 0 auto;">&#9673; MIC</button>
+                            <button type="button" id="voice-btn" class="btn-primary" style="flex:1;">SUBMIT QUERY &#9654;</button>
+                        </div>
+                        <div>
+                            <div class="form-label" style="margin-bottom:8px;">QUICK QUERIES</div>
+                            <div class="quick-actions">
+                                <button class="quick-btn" data-query="Show low stock">Low stock</button>
+                                <button class="quick-btn" data-query="Expiry alerts">Expiry alerts</button>
+                                <button class="quick-btn" data-query="Warehouse status">Warehouses</button>
+                                <button class="quick-btn" data-query="Today's summary">Summary</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Conversation</span>
+                        </div>
+                        <div id="voice-log" class="chat-box"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== REPORTS ==================== -->
+            <section class="panel" id="panel-reports">
+                <div class="section-header">
+                    <h2>Reporting Module</h2>
+                    <p>Daily summary metrics, movement logs, and operational intelligence for leadership teams.</p>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div id="report-summary" class="grid-3"></div>
+
+                <div class="card mt-24">
+                    <div class="card-header">
+                        <span class="card-title">Today's Movement Log</span>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>TIME</th>
+                                <th>TYPE</th>
+                                <th>PRODUCT</th>
+                                <th>QTY</th>
+                                <th>OPERATOR</th>
+                            </tr>
+                            </thead>
+                            <tbody id="report-movements"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- === FOOTER === -->
+    <footer class="statusbar">
+        <span><span class="dot dot-ok"></span> SYSTEM ONLINE</span>
+        <span>USER: ADMIN-01</span>
+        <span>DB: CONNECTED</span>
+        <span>VOICE ENGINE: ACTIVE</span>
+        <span>AI MODULE: RUNNING</span>
+        <span class="tail">WMS v3.0 &#183; Enterprise Operations Platform</span>
+    </footer>
+</div>
+
+<!-- === TOAST === -->
+<div id="toast" class="toast"></div>
+
+<!-- === THYMELEAF DATA === -->
+<script th:inline="javascript">
+    const serverInventory = /*[[${inventoryData}]]*/ [];
+    const serverMovements = /*[[${movementData}]]*/ [];
+    const serverWarehouses = /*[[${warehouses}]]*/ [];
+</script>
+
+<script>
+(function() {
+    'use strict';
+
+    // ===== PARTICLE SYSTEM =====
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const PARTICLE_COUNT = 50;
+
+    function initParticles() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                size: Math.random() * 2 + 0.5,
+                opacity: Math.random() * 0.3 + 0.1
+            });
+        }
+    }
+
+    function drawParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0) p.x = canvas.width;
+            if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height;
+            if (p.y > canvas.height) p.y = 0;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(99,102,241,${p.opacity})`;
+            ctx.fill();
+        });
+        // Draw faint connection lines
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 150) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(99,102,241,${0.04 * (1 - dist / 150)})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(drawParticles);
+    }
+
+    window.addEventListener('resize', initParticles);
+    initParticles();
+    drawParticles();
+
+    // ===== FALLBACK DATA =====
+    const FALLBACK_DATA = {
+        warehouses: ["WH-MUM-01", "WH-DEL-01", "WH-BLR-01"],
+        products: [
+            { id:"8901000000011",name:"Industrial Bearings",qty:12,min:20,warehouse:"WH-MUM-01",zone:"A",location:"A-R1-S1-B1",expiry:"2026-04-18",category:"FAST"},
+            { id:"8901000000012",name:"Hydraulic Fluid 5L",qty:5,min:15,warehouse:"WH-MUM-01",zone:"C",location:"C-R8-S3-B4",expiry:"2026-04-12",category:"MEDIUM"},
+            { id:"8901000000013",name:"Steel Bolts M12",qty:340,min:100,warehouse:"WH-DEL-01",zone:"B",location:"B-R2-S1-B2",expiry:"2026-10-15",category:"FAST"},
+            { id:"8901000000014",name:"Safety Helmets",qty:8,min:25,warehouse:"WH-DEL-01",zone:"B",location:"B-R2-S1-B2",expiry:"2026-04-07",category:"MEDIUM"},
+            { id:"8901000000015",name:"Lubricant Spray",qty:3,min:10,warehouse:"WH-BLR-01",zone:"D",location:"D-R4-S2-B6",expiry:"2026-04-05",category:"SLOW"},
+            { id:"8901000000016",name:"Filter Cartridges",qty:55,min:30,warehouse:"WH-BLR-01",zone:"D",location:"D-R4-S2-B6",expiry:"2026-05-12",category:"MEDIUM"}
+        ],
+        movements: [
+            { time:"09:14",type:"IN",product:"Steel Bolts M12",qty:50,user:"OPS-01"},
+            { time:"10:02",type:"OUT",product:"Safety Helmets",qty:4,user:"OPS-02"},
+            { time:"11:30",type:"IN",product:"Filter Cartridges",qty:25,user:"OPS-01"},
+            { time:"13:15",type:"OUT",product:"Hydraulic Fluid 5L",qty:2,user:"OPS-03"},
+            { time:"14:45",type:"IN",product:"Lubricant Spray",qty:8,user:"OPS-02"}
+        ]
+    };
+
+    const TODAY = new Date();
+
+    // ===== STATE =====
+    const state = {
+        tab: 'dashboard',
+        scanMode: 'IN',
+        inventory: (Array.isArray(serverInventory) && serverInventory.length ? serverInventory : FALLBACK_DATA.products).map(normalizeProduct),
+        movements: (Array.isArray(serverMovements) && serverMovements.length ? serverMovements : FALLBACK_DATA.movements).map(normalizeMovement),
+        warehouses: Array.isArray(serverWarehouses) && serverWarehouses.length ? serverWarehouses : FALLBACK_DATA.warehouses,
+        voiceLog: [
+            { role:'system', text:'WMS Voice Interface online. Ask about stock levels, expiry alerts, warehouse status, or daily summary.' }
+        ]
+    };
+
+    function normalizeProduct(item) {
+        const product = item.product || {};
+        const warehouse = typeof item.warehouse === 'object' ? (item.warehouse || {}) : null;
+        const location = typeof item.location === 'object' ? (item.location || {}) : null;
+        const lotBatch = typeof item.lotBatch === 'object' ? (item.lotBatch || {}) : null;
+        return {
+            id: product.barcode || item.barcode || item.id || product.sku || 'N/A',
+            name: product.name || item.name || 'Unnamed Item',
+            qty: Number(item.qty ?? item.quantity ?? 0),
+            min: Number(item.min ?? product.reorderLevel ?? item.reorderLevel ?? 10),
+            warehouse: typeof item.warehouse === 'string' ? item.warehouse : (warehouse?.code || warehouse?.name || 'UNASSIGNED'),
+            zone: item.zone || location?.zone || 'NA',
+            location: typeof item.location === 'string'
+                ? item.location
+                : location ? `${location.zone||'NA'}-${location.rack||'R0'}-${location.shelf||'S0'}-${location.bin||'B0'}` : 'NA-R0-S0-B0',
+            expiry: item.expiry || lotBatch?.expiryDate || futureDate(90),
+            category: item.category || product.velocityClass || 'STANDARD'
+        };
+    }
+
+    function normalizeMovement(item) {
+        const rawType = String(item.type || item.movementType || 'INFO').toUpperCase();
+        const mappedType = (rawType.includes('OUT') || rawType.includes('SHIP') || rawType.includes('PICK'))
+            ? 'OUT'
+            : (rawType.includes('IN') || rawType.includes('RECEIVE') || rawType.includes('PUTAWAY') || rawType.includes('REPLENISH'))
+                ? 'IN' : 'INFO';
+        return {
+            time: item.time || (item.eventTime ? new Date(item.eventTime).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '--:--'),
+            type: mappedType,
+            product: typeof item.product === 'object' ? (item.product?.name || item.product?.sku || 'Unknown') : (item.product || 'Unknown'),
+            qty: Number(item.qty ?? item.quantity ?? 0),
+            user: item.user || item.performedBy || 'system'
+        };
+    }
+
+    function futureDate(days) {
+        return new Date(TODAY.getTime() + days * 864e5).toISOString().slice(0, 10);
+    }
+
+    function daysUntil(dateStr) {
+        const d = new Date(dateStr);
+        return isNaN(d.getTime()) ? 999 : Math.ceil((d - TODAY) / 864e5);
+    }
+
+    function getStats() {
+        const lowStock = state.inventory.filter(i => i.qty < i.min);
+        const expiryAlert = state.inventory.filter(i => daysUntil(i.expiry) < 30);
+        const totalUnits = state.inventory.reduce((s, i) => s + i.qty, 0);
+        return { lowStock, expiryAlert, totalUnits };
+    }
+
+    function getToken() { return localStorage.getItem('wmsToken'); }
+
+    // ===== AUTH UI =====
+    function setAuthUi(isLive) {
+        const token = getToken();
+        const badge = document.getElementById('auth-badge');
+        const note = document.getElementById('auth-note');
+        const loginLink = document.getElementById('login-link');
+        const logoutBtn = document.getElementById('logout-btn');
+        const user = localStorage.getItem('wmsUser') || 'admin';
+
+        if (!token) {
+            badge.textContent = 'PREVIEW';
+            badge.style.color = 'var(--cyan)';
+            note.innerHTML = `<div class="auth-note-card">
+                <div class="auth-note-icon">&#128274;</div>
+                <div class="auth-note-text">Viewing in <strong>preview mode</strong> with sample data. <a href="/login">Sign in</a> to connect live API data and access full warehouse operations.</div>
+            </div>`;
+            loginLink.style.display = '';
+            logoutBtn.style.display = 'none';
+            return;
+        }
+
+        badge.textContent = isLive ? `LIVE \u00B7 ${user}` : `AUTH \u00B7 ${user}`;
+        badge.style.color = 'var(--emerald)';
+        note.innerHTML = `<div class="auth-note-card" style="border-color:rgba(16,185,129,0.15);background:rgba(16,185,129,0.04);">
+            <div class="auth-note-icon" style="background:var(--emerald-glow);">&#9889;</div>
+            <div class="auth-note-text">Connected to live APIs. Inventory and movement data synced in real-time.</div>
+        </div>`;
+        loginLink.style.display = 'none';
+        logoutBtn.style.display = '';
+    }
+
+    // ===== API SYNC =====
+    async function syncFromApi(showToast) {
+        const token = getToken();
+        if (!token) { setAuthUi(false); return; }
+        try {
+            const [stockRes, moveRes] = await Promise.all([
+                fetch('/api/wms/inventory/stock', { headers: { Authorization: `Bearer ${token}` } }),
+                fetch('/api/wms/inventory/movements', { headers: { Authorization: `Bearer ${token}` } })
+            ]);
+            if (!stockRes.ok || !moveRes.ok) throw new Error('Session expired.');
+            const [stockData, moveData] = await Promise.all([stockRes.json(), moveRes.json()]);
+            if (Array.isArray(stockData)) state.inventory = stockData.map(normalizeProduct);
+            if (Array.isArray(moveData)) state.movements = moveData.map(normalizeMovement);
+            renderAll();
+            setAuthUi(true);
+            if (showToast) toast('Live data synced successfully.', 'success');
+        } catch (e) {
+            localStorage.removeItem('wmsToken');
+            localStorage.removeItem('wmsUser');
+            setAuthUi(false);
+            if (showToast) toast(e.message || 'Sync failed.', 'error');
+        }
+    }
+
+    // ===== CLOCK =====
+    function updateClock() {
+        const el = document.getElementById('clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    }
+
+    // ===== TOAST =====
+    function toast(msg, type) {
+        const el = document.getElementById('toast');
+        el.textContent = (type === 'success' ? '\u2713 ' : '\u2717 ') + msg;
+        el.className = `toast show ${type || 'success'}`;
+        setTimeout(() => el.className = 'toast', 3000);
+    }
+
+    // ===== ANIMATED COUNTER =====
+    function animateValue(element, start, end, duration) {
+        const range = end - start;
+        const startTime = performance.now();
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            element.textContent = Math.round(start + range * eased).toLocaleString();
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+    }
+
+    // ===== MINI SPARKLINE SVG =====
+    function miniChart(values, color) {
+        const w = 200, h = 50;
+        const max = Math.max(...values, 1);
+        const points = values.map((v, i) => `${(i / (values.length - 1)) * w},${h - (v / max) * h}`).join(' ');
+        const areaPoints = points + ` ${w},${h} 0,${h}`;
+        return `<svg class="mini-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+            <polygon class="chart-area" points="${areaPoints}" fill="${color}"/>
+            <polyline points="${points}" stroke="${color}" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+    }
+
+    // ===== RENDER: Summary pills =====
+    function renderSummaryPills() {
+        const { lowStock, expiryAlert } = getStats();
+        document.getElementById('low-pill').innerHTML = `<span class="pill-dot danger"></span> ${lowStock.length} LOW STOCK`;
+        document.getElementById('expiry-pill').innerHTML = `<span class="pill-dot warn"></span> ${expiryAlert.length} EXPIRING`;
+    }
+
+    // ===== RENDER: Dashboard =====
+    function renderDashboard() {
+        const { lowStock, expiryAlert, totalUnits } = getStats();
+
+        const metrics = [
+            { label:'TOTAL SKUs', value:state.inventory.length, icon:'\u25A6', color:'var(--cyan)', glow:'var(--cyan-glow)', gradient:'var(--gradient-2)', trend:{ dir:'up', text:'+3 this week'} },
+            { label:'TOTAL UNITS', value:totalUnits, icon:'\u25E7', color:'var(--emerald)', glow:'var(--emerald-glow)', gradient:'var(--gradient-3)', trend:{ dir:'up', text:'Stock healthy'} },
+            { label:'LOW STOCK', value:lowStock.length, icon:'\u25BC', color:'var(--rose)', glow:'var(--rose-glow)', gradient:'var(--gradient-4)', trend:lowStock.length > 0 ? { dir:'down', text:'Needs attention'} : { dir:'neutral', text:'All clear'} },
+            { label:'EXPIRY WATCH', value:expiryAlert.length, icon:'\u25C8', color:'var(--amber)', glow:'var(--amber-glow)', gradient:'linear-gradient(135deg,#f59e0b,#d97706)', trend:expiryAlert.length > 0 ? { dir:'down', text:`${expiryAlert.length} within 30d`} : { dir:'neutral', text:'No urgency'} }
+        ];
+
+        document.getElementById('metric-cards').innerHTML = metrics.map((m, idx) => `
+            <div class="metric-card" style="animation-delay:${idx * 0.08}s;">
+                <div class="glow-bg" style="background:${m.glow};"></div>
+                <div class="metric-icon" style="background:${m.glow};color:${m.color};">${m.icon}</div>
+                <div class="metric-label">${m.label}</div>
+                <div class="metric-value count-up" style="color:${m.color};" data-target="${m.value}">0</div>
+                <div class="metric-trend trend-${m.trend.dir}">${m.trend.dir === 'up' ? '\u2191' : m.trend.dir === 'down' ? '\u2193' : '\u2192'} ${m.trend.text}</div>
+            </div>
+        `).join('');
+
+        // Animate counters
+        document.querySelectorAll('.count-up').forEach(el => {
+            animateValue(el, 0, parseInt(el.dataset.target) || 0, 800);
+        });
+
+        // Warehouse bars
+        const warehouses = [...new Set(state.inventory.map(i => i.warehouse))];
+        const maxUnits = Math.max(...warehouses.map(wh => state.inventory.filter(i => i.warehouse === wh).reduce((s, i) => s + i.qty, 0)), 1);
+        const gradients = ['var(--gradient-1)','var(--gradient-2)','var(--gradient-3)','var(--gradient-4)'];
+
+        document.getElementById('warehouse-bars').innerHTML = warehouses.map((wh, idx) => {
+            const items = state.inventory.filter(i => i.warehouse === wh);
+            const units = items.reduce((s, i) => s + i.qty, 0);
+            const pct = (units / maxUnits) * 100;
+            return `
+                <div class="warehouse-item">
+                    <div class="warehouse-header">
+                        <div class="warehouse-name"><div class="warehouse-icon">\u2B21</div> ${wh}</div>
+                        <div class="warehouse-value">${units.toLocaleString()} units</div>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-bar" style="width:${pct}%;background:${gradients[idx % gradients.length]};"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Recent movements
+        document.getElementById('recent-movements').innerHTML = state.movements.slice(0, 6).map(m => `
+            <div class="movement-item">
+                <span class="movement-time">${m.time}</span>
+                <span class="movement-type ${m.type === 'IN' ? 'type-in' : m.type === 'OUT' ? 'type-out' : 'type-info'}">${m.type}</span>
+                <span class="movement-product">${m.product}</span>
+                <span class="movement-qty">${m.qty}</span>
+            </div>
+        `).join('') || '<div style="color:var(--text-muted);padding:20px;text-align:center;">No recent movements.</div>';
+
+        // AI Alert feed
+        const alerts = [
+            ...lowStock.map(i => ({ type:'LOW STOCK', color:'var(--rose)', borderColor:'rgba(244,63,94,0.2)', bgColor:'rgba(244,63,94,0.04)', msg:`${i.name}: only <strong>${i.qty}</strong> of ${i.min} minimum remaining` })),
+            ...expiryAlert.map(i => ({ type:'EXPIRY', color:'var(--amber)', borderColor:'rgba(245,158,11,0.2)', bgColor:'rgba(245,158,11,0.04)', msg:`${i.name}: expires in <strong>${daysUntil(i.expiry)} days</strong>` }))
+        ].slice(0, 6);
+
+        document.getElementById('ai-alert-feed').innerHTML = alerts.length ? alerts.map(a => `
+            <div class="alert-card" style="border-color:${a.borderColor};background:${a.bgColor};">
+                <div class="alert-type" style="color:${a.color};"><span class="ai-badge">AI</span> ${a.type}</div>
+                <div class="alert-message">${a.msg}</div>
+            </div>
+        `).join('') : '<div style="color:var(--text-muted);padding:20px;text-align:center;grid-column:1/-1;">No active alerts. Operations running smoothly. \u2705</div>';
+    }
+
+    // ===== RENDER: Inventory =====
+    function renderInventory() {
+        document.getElementById('barcode-list').textContent = 'Available: ' + state.inventory.map(i => i.id).join(' \u00B7 ');
+        document.getElementById('inventory-table').innerHTML = state.inventory.map(item => {
+            const low = item.qty < item.min;
+            const days = daysUntil(item.expiry);
+            return `
+                <tr>
+                    <td style="font-family:'JetBrains Mono',monospace;color:var(--accent-light);">${item.id}</td>
+                    <td style="font-weight:500;">${item.name}</td>
+                    <td>${item.warehouse}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:11px;">${item.location}</td>
+                    <td><span style="color:${low ? 'var(--rose)' : 'var(--emerald)'};font-weight:700;">${item.qty}</span></td>
+                    <td style="color:var(--text-muted);">${item.min}</td>
+                    <td><span class="status-badge ${low ? 'status-low' : 'status-ok'}">${low ? '\u26A0 LOW' : '\u2713 OK'}</span></td>
+                    <td><span class="status-badge ${days < 0 ? 'status-expired' : days < 30 ? 'status-warn' : 'status-ok'}">${days < 0 ? 'EXPIRED' : days + 'd'}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // ===== RENDER: AI Analytics =====
+    function renderAi() {
+        const { lowStock, expiryAlert, totalUnits } = getStats();
+
+        // Low stock
+        document.getElementById('low-stock-list').innerHTML = lowStock.length ? lowStock.map(item => `
+            <div class="insight-card danger">
+                <div class="insight-header">
+                    <span class="insight-title">${item.name}</span>
+                    <span class="insight-value" style="color:var(--rose);">${item.qty}/${item.min}</span>
+                </div>
+                <div class="progress-track"><div class="progress-bar" style="width:${Math.min((item.qty/item.min)*100,100)}%;background:var(--gradient-4);"></div></div>
+                <div class="insight-recommendation"><span class="ai-badge">AI</span> Trigger replenishment for ${item.warehouse}</div>
+            </div>
+        `).join('') : '<div style="color:var(--emerald);padding:16px;text-align:center;">\u2713 All stock levels are healthy.</div>';
+
+        // Expiry
+        document.getElementById('expiry-list').innerHTML = expiryAlert.length ? expiryAlert.map(item => {
+            const days = daysUntil(item.expiry);
+            return `
+                <div class="insight-card warning">
+                    <div class="insight-header">
+                        <span class="insight-title">${item.name}</span>
+                        <span class="insight-value" style="color:var(--amber);">${days < 0 ? 'Expired' : days + ' days'}</span>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Location: ${item.warehouse} / ${item.location}</div>
+                    <div class="insight-recommendation"><span class="ai-badge">AI</span> ${days < 7 ? 'URGENT \u2014 Prioritize dispatch or markdown.' : 'Monitor and rotate stock (FEFO).'}</div>
+                </div>
+            `;
+        }).join('') : '<div style="color:var(--emerald);padding:16px;text-align:center;">\u2713 No critical expiry alerts.</div>';
+
+        // Category chart
+        const categories = state.inventory.reduce((acc, item) => {
+            const key = item.category || 'GENERAL';
+            acc[key] = (acc[key] || 0) + item.qty;
+            return acc;
+        }, {});
+        const maxCat = Math.max(...Object.values(categories), 1);
+        const catGradients = ['var(--gradient-1)','var(--gradient-2)','var(--gradient-3)','var(--gradient-4)', 'linear-gradient(135deg,#f59e0b,#d97706)'];
+        let catIdx = 0;
+
+        document.getElementById('category-chart').innerHTML = Object.entries(categories).map(([name, qty]) => {
+            const pct = (qty / maxCat) * 100;
+            return `
+                <div class="bar-row">
+                    <div class="bar-label">${name}</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${catGradients[catIdx++ % catGradients.length]};"></div></div>
+                    <div class="bar-value">${qty}</div>
+                </div>
+            `;
+        }).join('');
+
+        // Decision engine
+        const decisions = [
+            { icon:'\u26A0', color:'var(--amber)', bg:'var(--amber-glow)', text:`Replenish ${lowStock.length} SKU(s) below reorder threshold.` },
+            { icon:'\u23F1', color:'var(--rose)', bg:'var(--rose-glow)', text:`Prioritize FEFO clearance for ${expiryAlert.length} expiring lot(s).` },
+            { icon:'\u2B21', color:'var(--cyan)', bg:'var(--cyan-glow)', text:`${state.movements.length} movement events logged in current session.` },
+            { icon:'\u2B22', color:'var(--accent-light)', bg:'var(--accent-glow)', text:`Top focus: ${state.inventory[0] ? state.inventory[0].warehouse : 'N/A'}.` },
+            { icon:'\u25A6', color:'var(--emerald)', bg:'var(--emerald-glow)', text:`Coverage: ${totalUnits.toLocaleString()} units across all active zones.` }
+        ];
+
+        document.getElementById('decision-engine').innerHTML = decisions.map(d => `
+            <div class="decision-item">
+                <div class="decision-icon" style="background:${d.bg};color:${d.color};">${d.icon}</div>
+                <div class="decision-text">${d.text}</div>
+            </div>
+        `).join('');
+    }
+
+    // ===== RENDER: Voice =====
+    function renderVoiceLog() {
+        const log = document.getElementById('voice-log');
+        log.innerHTML = state.voiceLog.map(entry => `
+            <div style="display:flex;justify-content:${entry.role === 'user' ? 'flex-end' : 'flex-start'};">
+                <div class="chat-bubble bubble-${entry.role}">${entry.text}</div>
+            </div>
+        `).join('');
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function getAIResponse(query) {
+        const q = query.toLowerCase();
+        const { lowStock, expiryAlert, totalUnits } = getStats();
+        if (q.includes('stock') || q.includes('inventory'))
+            return `Current inventory: ${totalUnits.toLocaleString()} units across ${state.inventory.length} SKUs.`;
+        if (q.includes('expir'))
+            return expiryAlert.length
+                ? `\u26A0 ${expiryAlert.length} items expiring within 30 days: ${expiryAlert.map(i=>i.name).join(', ')}.`
+                : 'No critical expiry alerts active.';
+        if (q.includes('low') || q.includes('replenish'))
+            return lowStock.length
+                ? `${lowStock.length} low-stock items: ${lowStock.map(i=>`${i.name} (${i.qty}/${i.min})`).join(', ')}.`
+                : 'All items above reorder threshold.';
+        if (q.includes('warehouse') || q.includes('location'))
+            return `Active warehouses: ${[...new Set(state.inventory.map(i=>i.warehouse))].join(', ')}.`;
+        if (q.includes('summary') || q.includes('report') || q.includes('today'))
+            return `Summary: ${state.inventory.length} SKUs, ${totalUnits.toLocaleString()} units, ${state.movements.length} movements.`;
+        return 'Query received. Try asking about stock levels, expiry alerts, warehouse status, or daily summary.';
+    }
+
+    function handleVoice() {
+        const input = document.getElementById('voice-query');
+        const query = input.value.trim();
+        if (!query) return;
+        state.voiceLog.push({ role:'user', text:query });
+        input.value = '';
+        renderVoiceLog();
+        setVoiceState('speaking');
+        setTimeout(() => {
+            const response = getAIResponse(query);
+            state.voiceLog.push({ role:'ai', text:response });
+            renderVoiceLog();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(response);
+                utter.rate = 0.95;
+                utter.onend = () => setVoiceState('idle');
+                window.speechSynthesis.speak(utter);
+            } else {
+                setTimeout(() => setVoiceState('idle'), 1200);
+            }
+        }, 400);
+    }
+
+    function setVoiceState(s) {
+        const orb = document.getElementById('voice-orb');
+        const label = document.getElementById('voice-status');
+        orb.classList.remove('listening','speaking');
+        if (s === 'listening') { orb.classList.add('listening'); label.textContent = 'LISTENING...'; }
+        else if (s === 'speaking') { orb.classList.add('speaking'); label.textContent = 'RESPONDING...'; }
+        else { label.textContent = 'STANDBY'; }
+    }
+
+    function startListening() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            setVoiceState('listening');
+            toast('Browser speech recognition unavailable. Type your query.', 'error');
+            setTimeout(() => setVoiceState('idle'), 1200);
+            return;
+        }
+        const rec = new SR();
+        rec.onstart = () => setVoiceState('listening');
+        rec.onresult = (e) => { document.getElementById('voice-query').value = e.results[0][0].transcript; };
+        rec.onerror = () => { setVoiceState('idle'); toast('Voice capture failed.', 'error'); };
+        rec.onend = () => setVoiceState('idle');
+        rec.start();
+    }
+
+    // ===== RENDER: Reports =====
+    function renderReports() {
+        const { lowStock, expiryAlert, totalUnits } = getStats();
+        const inward = state.movements.filter(i => i.type === 'IN').length;
+        const outward = state.movements.filter(i => i.type === 'OUT').length;
+        const cards = [
+            ['Active Warehouses', [...new Set(state.inventory.map(i => i.warehouse))].length],
+            ['Total SKUs', state.inventory.length],
+            ['Total Units', totalUnits.toLocaleString()],
+            ['Inward Movements', inward],
+            ['Outward Movements', outward],
+            ['Low Stock Alerts', lowStock.length],
+            ['Expiry Alerts', expiryAlert.length],
+            ['Voice Engine', 'ACTIVE'],
+            ['AI Module', 'RUNNING']
+        ];
+
+        document.getElementById('report-summary').innerHTML = cards.map(([label, value]) => `
+            <div class="card report-card">
+                <div class="report-value">${value}</div>
+                <div class="report-label">${label}</div>
+            </div>
+        `).join('');
+
+        document.getElementById('report-movements').innerHTML = state.movements.map(m => `
+            <tr>
+                <td style="font-family:'JetBrains Mono',monospace;color:var(--text-muted);">${m.time}</td>
+                <td><span class="movement-type ${m.type === 'IN' ? 'type-in' : m.type === 'OUT' ? 'type-out' : 'type-info'}">${m.type}</span></td>
+                <td>${m.product}</td>
+                <td style="font-weight:700;color:var(--accent-light);">${m.qty}</td>
+                <td style="color:var(--text-muted);">${m.user}</td>
+            </tr>
+        `).join('');
+    }
+
+    // ===== SCAN HANDLER =====
+    function handleScan() {
+        const barcode = document.getElementById('scan-id').value.trim().toUpperCase();
+        const qty = Math.max(1, Number(document.getElementById('scan-qty').value || 1));
+        const product = state.inventory.find(i => String(i.id).toUpperCase() === barcode);
+        if (!barcode) { toast('Enter a barcode before scanning.', 'error'); return; }
+        if (!product) { toast(`Barcode ${barcode} not found.`, 'error'); return; }
+        if (state.scanMode === 'OUT' && product.qty < qty) { toast('Insufficient stock.', 'error'); return; }
+
+        product.qty += state.scanMode === 'IN' ? qty : -qty;
+        state.movements.unshift({
+            time: new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }),
+            type: state.scanMode,
+            product: product.name,
+            qty, user: 'UI-OPS'
+        });
+        document.getElementById('scan-id').value = '';
+        document.getElementById('scan-qty').value = 1;
+        renderAll();
+        toast(`${state.scanMode === 'IN' ? 'Inward' : 'Outward'} scan: ${product.name} x${qty}`, 'success');
+    }
+
+    // ===== RENDER ALL =====
+    function renderAll() {
+        renderSummaryPills();
+        renderDashboard();
+        renderInventory();
+        renderAi();
+        renderVoiceLog();
+        renderReports();
+    }
+
+    // ===== EVENT LISTENERS =====
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+        });
+    });
+
+    document.getElementById('mode-in').addEventListener('click', () => {
+        state.scanMode = 'IN';
+        document.getElementById('mode-in').className = 'scan-mode-btn active-in';
+        document.getElementById('mode-out').className = 'scan-mode-btn';
+    });
+    document.getElementById('mode-out').addEventListener('click', () => {
+        state.scanMode = 'OUT';
+        document.getElementById('mode-out').className = 'scan-mode-btn active-out';
+        document.getElementById('mode-in').className = 'scan-mode-btn';
+    });
+    document.getElementById('scan-btn').addEventListener('click', handleScan);
+    document.getElementById('scan-id').addEventListener('keydown', e => { if (e.key === 'Enter') handleScan(); });
+    document.getElementById('voice-btn').addEventListener('click', handleVoice);
+    document.getElementById('listen-btn').addEventListener('click', startListening);
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('wmsToken');
+        localStorage.removeItem('wmsUser');
+        window.location.href = '/login';
+    });
+    document.getElementById('voice-query').addEventListener('keydown', e => { if (e.key === 'Enter') handleVoice(); });
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => { document.getElementById('voice-query').value = btn.dataset.query; });
+    });
+
+    // ===== INIT =====
+    updateClock();
+    setInterval(updateClock, 1000);
+    renderAll();
+    setAuthUi(false);
+    syncFromApi();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/wms}
+    username: ${DB_USER:wms_user}
+    password: ${DB_PASSWORD:wms_password}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  thymeleaf:
+    cache: false
+
+server:
+  port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/css,application/javascript
+    min-response-size: 1024
+
+wms:
+  security:
+    jwt-secret: "${JWT_SECRET:change-this-to-a-long-secret-key-for-production-at-least-256-bits}"
+    jwt-expiry-ms: ${JWT_EXPIRY_MS:86400000}
+  slotting:
+    fast-zone-prefix: "A"
+    fast-zone-bonus: 100
+    slow-zone-prefix: "C"
+    slow-zone-bonus: 80
+    heavy-shelf-suffix: "1"
+    heavy-shelf-bonus: 120
+    light-shelf-suffix: "3"
+    light-shelf-bonus: 40
+  openai:
+    api-key: "${OPENAI_API_KEY:}"
+    model: "gpt-4o-mini"
+  voice:
+    api-key: "${VOICE_API_KEY:}"
+    stt-provider: "${STT_PROVIDER:simulated}"
+    stt-url: "${VOICE_STT_URL:}"
+    vosk-model-path: "${VOSK_MODEL_PATH:}"
+    vosk-sample-rate: "${VOSK_SAMPLE_RATE:16000}"
+    google-stt-api-key: "${GOOGLE_STT_API_KEY:}"
+    google-stt-language: "${GOOGLE_STT_LANGUAGE:en-US}"
+    google-stt-sample-rate: "${GOOGLE_STT_SAMPLE_RATE:16000}"
+    google-stt-encoding: "${GOOGLE_STT_ENCODING:LINEAR16}"
+    tts-url: "${VOICE_TTS_URL:}"
+    openai-tts-model: "${OPENAI_TTS_MODEL:gpt-4o-mini-tts}"
+    openai-tts-voice: "${OPENAI_TTS_VOICE:alloy}"
+    openai-tts-format: "${OPENAI_TTS_FORMAT:mp3}"
